@@ -5,7 +5,7 @@ import java.util.Set;
 public class CutWord{
   
   int mode; // 0 = no time stamp
-	
+  int lineNumber=0;
   int COMMIT_EVERY=500; 
   String COMMIT_START = "BEGIN";
   String COMMIT_END = "COMMIT/*!*/;";
@@ -76,7 +76,7 @@ public class CutWord{
   public void process(){
     try{
       //System.out.println("Start");
-      int i=0;
+      lineNumber=0;
       StringBuffer sb = new StringBuffer();
       FileInputStream fin = new FileInputStream(inFile);
       InputStreamReader reader = new InputStreamReader(fin, "UTF-8");
@@ -84,7 +84,7 @@ public class CutWord{
       String tmpStr = "";
       for (String line = br.readLine(); line != null; line = br.readLine()) {
         //System.out.println(line);
-          i++;
+    	lineNumber++;
     	if(line.startsWith(comment)==true) continue; //ignore comment
         
         tmpStr = processLine(br,line);
@@ -111,16 +111,22 @@ public class CutWord{
 		if(line.startsWith(keyWord[i])){
 			String statement = "";			
 			
-			while(line.contains(endWord) == false) {
-				statement += line;
-				try {
-					line = br.readLine();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}		
-				
-			}									
+				while(line != null && line.contains(endWord) == false) {
+					statement += line;
+					try {
+						line = br.readLine();
+						lineNumber++;
+						//System.out.println(lineNumber+":"+line);
+					} catch (IOException e) {
+						System.out.println(lineNumber);
+						System.out.println(line);
+						System.out.println(statement);
+						e.printStackTrace();
+						
+					}		
+					
+				}									
+			
 			
 			statement += line; // get complete statement 
 			
