@@ -12,6 +12,7 @@ public class CutMember{
 	  String comment="#";
 	  String delimiter = "/*!*/;";
 	  String DELI_WORD="DELIMITER";
+	  String OUTPUT_FOLDER="output";
 	
 	
 	  //Check dup Time Stamp;   SET TIMESTAMP=1394438821/*!*/;
@@ -108,7 +109,7 @@ public class CutMember{
       
       sb.append(COMMIT_END+delimiter);
 
-      FileUtils.saveFile(inFile+".out."+mode+".sql",sb);
+      FileUtils.saveFile(listFile.addLastPath(inFile,OUTPUT_FOLDER)+".out."+mode+".sql",sb);
       
     }catch(Exception e){
       e.printStackTrace();
@@ -203,12 +204,6 @@ public class CutMember{
 
  }
    
-   /*
-	
-	int mode = 0;// No Time Stamp Mode
-    CutWord cw=new CutWord("slave-relay-bin.000072.sql",mode);  
-    cw.process();
-    */
   
 }
  

@@ -80,4 +80,34 @@ public class ListFiles {
 		return str;
 	}
     
+	
+	public  String getDir(String fullPathfile){
+		File f = new File(fullPathfile);
+		String absolutePath = f.getAbsolutePath();		
+   	    String filePath = absolutePath.substring(0,absolutePath.lastIndexOf(File.separator));
+   	    return filePath;
+	}
+	
+	public  String getFileName(String fullPathfile){
+		File f = new File(fullPathfile);
+		return f.getName();
+		
+	}
+	
+	//input  D:\Dropbox\Billing\Java\sql_100\slave-relay-bin.000086.sql
+	//output D:\Dropbox\Billing\Java\sql_100\OUTPUT\slave-relay-bin.000086.sql
+	public  String addLastPath(String fullPathfile,String addPath){
+		String p = getDir(fullPathfile);
+		String f = getFileName(fullPathfile);	
+		
+		String newDir =  p+File.separator+addPath;
+		
+		File directory = new File(newDir);
+		
+		if(!directory.exists()) directory.mkdir();
+		
+		return directory+File.separator+f;
+	}
+
+	
 }
