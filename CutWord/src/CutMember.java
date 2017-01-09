@@ -12,7 +12,8 @@ public class CutMember{
 	  String comment="#";
 	  String delimiter = "/*!*/;";
 	  String DELI_WORD="DELIMITER";
-	  String OUTPUT_FOLDER="output";
+	  String OUTPUT_FOLDER="member_output";
+	  String INSERT_ID_STR="SET INSERT_ID";
 	  String totalFile="";
 	
 	
@@ -95,10 +96,10 @@ public class CutMember{
     	  
     	  String outputPath= listFile.getDir(currentFile)+File.separator+OUTPUT_FOLDER;
 		
-    	  totalFile = outputPath+File.separator+"00_MEMBER_ALL.sql";
+    	 totalFile = outputPath+File.separator+"00_MEMBER_ALL.sql";
     	 FileUtils.saveFile(totalFile,totalsb);
     	 System.out.println("Summary File :"+totalFile);
-    	 
+    	 System.out.println("Generated output files were saved in : "+OUTPUT_FOLDER);
 	} catch (IOException e) {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
@@ -121,12 +122,29 @@ public class CutMember{
 	      for (String line = br.readLine(); line != null; line = br.readLine()) {
 	    	
 	    	  
-	       // Delete all delemiter 
-	        if(line.startsWith(DELI_WORD)) continue;
+	       // Delete all delemiter   // delete all commit 
+	        if(containUnusedLine(line)==true) continue;
 	        
-	       // delete all commit 
-	        if(line.startsWith(COMMIT_END)) continue;
+
 	    	  
+	        //get rid of many line "SET INSERT_ID" --> use only last line
+	        if(line.startsWith(INSERT_ID_STR)) {	
+	        	//System.out.println("Found "+line);
+	        	String tmpLine;
+	        	for (tmpLine = br.readLine(); tmpLine != null; tmpLine = br.readLine()) {
+	        		if(tmpLine.startsWith(INSERT_ID_STR)) {
+	        			line = tmpLine;
+	        			//System.out.println("Found loop"+tmpLine);
+	        		}
+	        		else {
+	        			if(containUnusedLine(tmpLine)==false) line += newline+tmpLine;
+	        			break; 
+	        		}
+	        	}
+	        	
+	        }
+	        
+	        
 	        sb.append(line).append(newline);
 	 
 	
@@ -143,6 +161,16 @@ public class CutMember{
 			e.printStackTrace();
 		}
 	    
+  }
+  
+  public boolean containUnusedLine(String line){
+      // Delete all delemiter 
+      if(line.startsWith(DELI_WORD))  return true;
+      
+     // delete all commit 
+      if(line.startsWith(COMMIT_END)) return true;
+      
+      return false;
   }
   
   public void processFile(String inFile){

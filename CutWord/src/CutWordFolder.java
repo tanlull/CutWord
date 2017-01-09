@@ -3,43 +3,51 @@ import java.util.HashMap;
 import java.util.Set;
 
 import utils.billing.util.FileUtils;
+import utils.billing.util.ListFiles;
 
-public class CutWordFile{
+public class CutWordFolder{
+  
 	 String COMMIT_START = "BEGIN";
 	  String COMMIT_END = "COMMIT";
 	  String comment="#";
 	  String delimiter = "/*!*/;";
 	  String DELI_WORD="DELIMITER";
+	  String OUTPUT_FOLDER="sql_output";
 	
 	
 	  //Check dup Time Stamp;   SET TIMESTAMP=1394438821/*!*/;
 	  String lastTimeStamp="";
 	  String startTimeStamp="SET";
 	  String followTimeStamp="TIMESTAMP";
-	  
+	
   int mode; // 0 = no time stamp
   int lineNumber=0;
   int COMMIT_EVERY=500; 
- 
-  String inFile;
+
+  ListFiles listFile;
+  String [] inputFiles;
+  
+
+  
+  
+  String inDir;
   public static String newline = System.getProperty("line.separator");
   
   String [] keyWord ;
   
   HashMap  <String,String []> wordMap = new  HashMap<String, String[]>();
     
-  public CutWordFile (String file,int mode){
-    inFile = file;
+  public CutWordFolder (String dir,int mode){
+	inDir = dir;
     this.mode=mode;
+    listFile = new ListFiles(inDir);
+    inputFiles =  listFile.findFileFullPathFilter(".sql");
+    //printArray(inputFiles);
     buildWordCollection();
   }
   
   public void buildWordCollection(){
-	 // String [] firstWord = {"SET","INSERT","UPDATE ","DELETE","SET","SET","DELIMITER","use"};
-	 // String [] secondWord = {"TIMESTAMP","INTO","SET","FROM","@@session","INSERT_ID","",""};
 
-	  //String [] word1 = {"TIMESTAMP","@@session","INSERT_ID"};	
-	  
 	  if (mode == 0) {
 		  String [] word1 = {"INSERT_ID"};
 		  wordMap.put("SET",word1);
@@ -60,7 +68,7 @@ public class CutWordFile{
 	  String [] word4 = {"FROM"};			  
 	  wordMap.put("DELETE",word4);
 	  
-	  String [] word5 = {" "};	wordMap.put(DELI_WORD,word5);
+	  String [] word5 = {" "};	wordMap.put("DELIMITER",word5);
 	  
 	  String [] word6 = {" "};			  
 	  wordMap.put("use",word6);
@@ -71,12 +79,16 @@ public class CutWordFile{
 	  
 	  }
 	  
-  
-  
-  
   public void process(){
+	  
+	  for(String file : inputFiles ) processFile(file);
+	  System.out.println("Generated output files were saved in : "+OUTPUT_FOLDER);
+  }
+  
+  
+  public void processFile(String inFile){
     try{
-      //System.out.println("Start");
+      System.out.println("File: "+inFile);
       lineNumber=0;
       StringBuffer sb = new StringBuffer();
       FileInputStream fin = new FileInputStream(inFile);
@@ -96,8 +108,9 @@ public class CutWordFile{
     //  System.out.println("Process "+i+" Line");
       
       sb.append(COMMIT_END+delimiter);
+
+      FileUtils.saveFile(listFile.addLastPath(inFile,OUTPUT_FOLDER)+".out."+mode+".sql",sb);
       
-      FileUtils.saveFile(inFile+".out."+mode+".sql",sb);
     }catch(Exception e){
       e.printStackTrace();
     }
@@ -110,6 +123,7 @@ public class CutWordFile{
 	for(int i=0; i<keyWord.length;i++){
 		
 		if(line.startsWith(keyWord[i])){
+			
 			
 			//Check delimiter
 			if(line.startsWith(DELI_WORD)){
@@ -174,29 +188,30 @@ public class CutWordFile{
     return null;
   }
   
-
   
  public static void main(String [] args){
    
    if(args.length < 1){
    System.out.println("Please provide file to be processed");
-   System.out.println("Usage : >java -jar CutWord.jar filename.sql mode");
+   System.out.println("Usage : >java -classpath CutWord.jar CutMember FullPath");
   }else{
 	  
   	int mode = 0;// No Time Stamp Mode
   	if(args.length == 2) mode = Integer.parseInt(args[1]);
-  	System.out.println("Process File : "+ args[0]);
-    CutWordFile cw=new CutWordFile(args[0],mode); 
+  	System.out.println("Process path : "+ args[0]);
+    CutWordFolder cw=new CutWordFolder(args[0],mode); 
     cw.process();
 
  }
    
-   /*
-	
-	int mode = 0;// No Time Stamp Mode
-    CutWord cw=new CutWord("slave-relay-bin.000072.sql",mode);  
-    cw.process();
-    */
   
 }
+ 
+	public void printArray(String[] ary) {
+		for(String i:ary) {
+			System.out.print(i+"\n");
+		}
+		System.out.println("\n");
+	}
+ 
 }
