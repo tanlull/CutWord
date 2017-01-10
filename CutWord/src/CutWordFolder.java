@@ -1,9 +1,12 @@
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
 import utils.billing.util.FileUtils;
 import utils.billing.util.ListFiles;
+
+
 
 public class CutWordFolder{
   
@@ -42,6 +45,7 @@ public class CutWordFolder{
     this.mode=mode;
     listFile = new ListFiles(inDir);
     inputFiles =  listFile.findFileFullPathFilter(".sql");
+    Arrays.sort(inputFiles);  // Sort by name
     //printArray(inputFiles);
     buildWordCollection();
   }
@@ -193,7 +197,7 @@ public class CutWordFolder{
    
    if(args.length < 1){
    System.out.println("Please provide file to be processed");
-   System.out.println("Usage : >java -classpath CutWord.jar CutMember FullPath");
+   System.out.println("Usage : >java -classpath CutWord.jar CutWordFolder FullPath");
   }else{
 	  
   	int mode = 0;// No Time Stamp Mode
@@ -202,7 +206,7 @@ public class CutWordFolder{
     CutWordFolder cw=new CutWordFolder(args[0],mode); 
     cw.process();
 
- }
+ } 
    
   
 }

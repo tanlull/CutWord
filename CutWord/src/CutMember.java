@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -27,6 +28,8 @@ public class CutMember{
   int mode; // 0 = no time stamp
   int lineNumber=0;
   int COMMIT_EVERY=500; 
+  int fileCount=1;
+  int maxFileSave = 20;
 
   ListFiles listFile;
   String [] inputFiles;
@@ -46,6 +49,7 @@ public class CutMember{
     this.mode=mode;
     listFile = new ListFiles(inDir);
     inputFiles =  listFile.findFileFullPathFilter(".sql");
+    Arrays.sort(inputFiles);  // Sort by name
     //printArray(inputFiles);
     buildWordCollection();
   }
@@ -84,6 +88,12 @@ public class CutMember{
 	  
   public void process(){
 	  String currentFile="";
+	  
+ 	 // create total output file
+	  String outputPath= listFile.getDir(inputFiles[0])+File.separator+OUTPUT_FOLDER;		
+ 	 totalFile = outputPath+File.separator+"00_MEMBER_ALL.sql";
+ 	 
+ 	 
 	  for(String file : inputFiles ) {
 		  currentFile = file;
 		  processFile(file);
@@ -92,11 +102,8 @@ public class CutMember{
 	  // save all data to one file
       try {
     	 
-    	  totalsb.append(COMMIT_END+delimiter);  
-    	  
-    	  String outputPath= listFile.getDir(currentFile)+File.separator+OUTPUT_FOLDER;
-		
-    	 totalFile = outputPath+File.separator+"00_MEMBER_ALL.sql";
+      	 totalsb.append(COMMIT_END+delimiter);  
+    	 
     	 FileUtils.saveFile(totalFile,totalsb);
     	 System.out.println("Summary File :"+totalFile);
     	 System.out.println("Generated output files were saved in : "+OUTPUT_FOLDER);
@@ -109,6 +116,9 @@ public class CutMember{
       cleanTotalFile(totalFile);
       
   }
+  
+  
+  
   
   
   public void cleanTotalFile(String totalFile){
@@ -154,7 +164,7 @@ public class CutMember{
 	      sb.append("DELIMITER ;").append(newline).append("COMMIT;").append(newline);;
 	      
 	      //save to new file
-	      FileUtils.saveFile(totalFile+".lean.sql",sb);
+	      FileUtils.saveReplaceFile(totalFile+".lean.sql",sb);
 	      br.close();reader.close();fin.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -175,7 +185,7 @@ public class CutMember{
   
   public void processFile(String inFile){
     try{
-      System.out.println("File: "+inFile);
+      System.out.println(fileCount +" : "+inFile);
       lineNumber=0;
       StringBuffer sb = new StringBuffer();
       FileInputStream fin = new FileInputStream(inFile);
@@ -197,12 +207,22 @@ public class CutMember{
       
       sb.append(COMMIT_END+delimiter);      
     
-      FileUtils.saveFile(listFile.addLastPath(inFile,OUTPUT_FOLDER)+".out."+mode+".sql",sb);
+      FileUtils.saveReplaceFile(listFile.addLastPath(inFile,OUTPUT_FOLDER)+".out."+mode+".sql",sb);
+      
+      
+      //save StringBuffer to file na dclear string buffer
+      if((fileCount%maxFileSave)==0){
+    	  if(fileCount <= maxFileSave) FileUtils.saveReplaceFile(totalFile,totalsb); //first time saving
+    	  else FileUtils.saveFile(totalFile,totalsb);
+    	  totalsb.delete(0, totalsb.length()); // clear string buffer
+    	  System.out.println("Flush data to file");
+      }
+      fileCount+=1;
       br.close();reader.close();fin.close();
     }catch(Exception e){
       e.printStackTrace();
     }
-    System.out.println("Finished");
+   // System.out.println("Finished");
     
   }
   
